@@ -1,91 +1,159 @@
 // Text Data Generation Engine
-// Uses Google Gemini API for real text generation
+// Uses OpenRouter LLM API via backend proxy
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// Helper function to call LLM API through backend proxy
+async function callLLMAPI(prompt) {
+  try {
+    const response = await fetch("http://localhost:4000/api/groq", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt }),
+    });
 
-const genAI = new GoogleGenerativeAI("AIzaSyAV_i0KHOLCu0mwqulaKW4yr1uVjEOu-H8"); // Replace with your actual key
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    if (!response.ok) {
+      let errorMsg = `Backend error (${response.status})`;
+      try {
+        const errorData = await response.json();
+        errorMsg += `: ${errorData.error || "Unknown error"}`;
+      } catch {
+        // ignore parse error
+      }
+      throw new Error(errorMsg);
+    }
 
-// Helper function to extract and parse JSON from markdown-wrapped responses
-function parseGeminiJSON(text) {
-  // Remove markdown code blocks if present
-  let cleanText = text
-    .replace(/```json\n?/g, "")
-    .replace(/```\n?/g, "")
-    .trim();
-  return JSON.parse(cleanText);
+    const data = await response.json();
+    if (!data.content || typeof data.content !== "string") {
+      throw new Error("Empty or invalid content in API response");
+    }
+    return data.content;
+  } catch (error) {
+    console.error("LLM API call failed:", error.message);
+    throw error;
+  }
+}
+
+// Helper function to extract and parse JSON from LLM responses
+function parseLLMJSON(text) {
+  if (!text || typeof text !== "string") {
+    console.warn("Invalid LLM response text:", typeof text);
+    return null;
+  }
+
+  try {
+    // Remove markdown code fence wrappers
+    let cleanText = text
+      .replace(/```json\s*/gi, "")
+      .replace(/```\s*/g, "")
+      .trim();
+
+    // Try to find JSON array in the response
+    const arrayMatch = cleanText.match(/\[[\s\S]*\]/);
+    if (arrayMatch) {
+      return JSON.parse(arrayMatch[0]);
+    }
+
+    return JSON.parse(cleanText);
+  } catch (err) {
+    console.warn("JSON parse failed:", err.message);
+
+    // Last resort: extract quoted strings
+    try {
+      const matches = text.match(/"([^"]+)"/g);
+      if (matches && matches.length > 0) {
+        return matches.map((m) => m.replace(/^"|"$/g, ""));
+      }
+    } catch {
+      // ignore
+    }
+
+    return null;
+  }
 }
 
 export async function generateTextData({ topic, length, tone, count }) {
-  const data = [];
-
   const lengthMap = {
     short: "1-2 sentences",
     medium: "3-5 sentences",
     long: "a detailed paragraph",
   };
 
-  const prompt = `Generate ${count} pieces of synthetic text data about ${topic}. Each piece should be ${lengthMap[length]} long, in a ${tone} tone. Make them realistic and varied. Return as a JSON array of strings.`;
+  const prompt = `Generate ${count} pieces of text about "${topic}".
+Rules:
+- Each piece should be ${lengthMap[length]}
+- Tone: ${tone}
+- Return ONLY a JSON array of strings, nothing else
+- No explanation, no markdown
+
+Example format: ["text 1", "text 2"]`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    const parsed = parseGeminiJSON(text);
+    const text = await callLLMAPI(prompt);
+    const parsed = parseLLMJSON(text);
 
-    if (!Array.isArray(parsed)) {
-      throw new Error("Gemini did not return an array");
+    if (!parsed || !Array.isArray(parsed) || parsed.length === 0) {
+      console.warn("LLM returned invalid data, using fallback");
+      return generateDummyTextData({ topic, length, tone, count });
     }
 
-    return parsed.map((textItem, index) => ({
-      id: index + 1,
-      text: String(textItem),
-      topic,
-      length,
-      tone,
-      wordCount: String(textItem).split(/\s+/).length,
-      generatedAt: new Date().toISOString(),
-    }));
+    // Pad results if API returned fewer than requested
+    const result = [];
+    for (let i = 0; i < count; i++) {
+      const textItem = parsed[i % parsed.length];
+      result.push({
+        id: i + 1,
+        text: String(textItem),
+        topic,
+        length,
+        tone,
+        wordCount: String(textItem).split(/\s+/).length,
+        generatedAt: new Date().toISOString(),
+      });
+    }
+    return result;
   } catch (error) {
-    console.error("Gemini API error:", error);
-    // Fallback to dummy data if API fails
+    console.error("LLM API error:", error.message);
     return generateDummyTextData({ topic, length, tone, count });
   }
 }
 
-// Fallback dummy generator
+// Fallback dummy generator — used when API is unavailable
 function generateDummyTextData({ topic, length, tone, count }) {
   const templates = {
     short: [
-      `This is a short ${tone} text about ${topic}.`,
-      `Brief information regarding ${topic} in ${tone} style.`,
-      `A concise note on ${topic}.`,
-      `Short ${tone} overview of ${topic} topic.`,
-      `Quick ${tone} reference about ${topic}.`,
+      `This is a concise ${tone} overview about ${topic}, highlighting the most essential aspects.`,
+      `A brief ${tone} note on ${topic} covering the key points and main takeaways.`,
+      `Short ${tone} summary discussing ${topic} and its relevance in today's context.`,
+      `Quick ${tone} reference about ${topic} with essential facts and figures.`,
+      `A compact ${tone} analysis of ${topic} focusing on core principles.`,
+      `Introducing ${topic}: a ${tone} perspective on its significance and impact.`,
+      `Key insights about ${topic} presented in a ${tone} manner for quick understanding.`,
     ],
     medium: [
-      `This is a medium-length ${tone} text about ${topic}. It provides more details and context about the subject matter.`,
-      `Here is some ${tone} content related to ${topic}. It includes additional information and examples.`,
-      `A detailed explanation of ${topic} written in a ${tone} manner.`,
+      `This is a ${tone} exploration of ${topic}. It delves into the fundamental concepts and provides context for understanding its importance. The discussion covers key areas that are most relevant to current developments in the field.`,
+      `Here is a ${tone} analysis of ${topic}. It examines multiple perspectives and presents evidence-based insights. The content is structured to provide both breadth and depth of understanding on the subject matter.`,
+      `A comprehensive ${tone} review of ${topic}. This piece discusses the historical background, current state, and future implications. Multiple aspects are considered to provide a well-rounded perspective.`,
+      `An informative ${tone} piece about ${topic} that covers the essential theories and practical applications. It draws on recent research and expert opinions to present a balanced view of the subject.`,
     ],
     long: [
-      `This is a comprehensive ${tone} text about ${topic}. It covers various aspects, provides in-depth analysis, and includes multiple examples and details to give a complete understanding of the subject. The content is structured to be informative and engaging.`,
-      `An extensive discussion on ${topic} presented in a ${tone} style. This text explores different perspectives, includes relevant background information, and offers insights that would be valuable for research or learning purposes.`,
+      `This is a detailed ${tone} examination of ${topic}. It provides an in-depth look at the various facets of the subject, including its historical development, current applications, and future prospects. The analysis draws on multiple sources and perspectives to offer a comprehensive understanding. Key challenges and opportunities are identified, along with potential strategies for addressing them. The discussion is supported by data and examples that illustrate the practical implications of the topic.`,
+      `An extensive ${tone} discussion on ${topic} that explores the subject from multiple angles. This piece covers the theoretical foundations, practical applications, and societal implications. It examines how ${topic} has evolved over time and what trends are shaping its future direction. Case studies and real-world examples are used to illustrate key points, making the content both informative and engaging for readers at all levels.`,
+      `A thorough ${tone} analysis of ${topic}, examining its multifaceted nature and broad implications. The discussion spans historical context, current state of affairs, and projected developments. Through careful analysis of available evidence and expert perspectives, this piece aims to provide readers with a nuanced understanding of ${topic} and its role in shaping modern discourse and practice.`,
     ],
   };
 
-  const selectedTemplates = templates[length];
+  const selectedTemplates = templates[length] || templates.short;
   const data = [];
   for (let i = 0; i < count; i++) {
+    const text = selectedTemplates[i % selectedTemplates.length];
     data.push({
       id: i + 1,
-      text: selectedTemplates[
-        Math.floor(Math.random() * selectedTemplates.length)
-      ],
+      text,
       topic,
       length,
       tone,
-      wordCount: 20 + Math.floor(Math.random() * 50),
+      wordCount: text.split(/\s+/).length,
       generatedAt: new Date().toISOString(),
     });
   }

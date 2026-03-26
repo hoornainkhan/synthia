@@ -158,11 +158,7 @@ export default function DatasetView() {
           <div>
             <h1 className="text-2xl font-bold text-dark-50">{dataset.name}</h1>
             <div className="flex items-center gap-3 mt-1">
-              <span
-                className={`tag ${dataset.modelTag === "GAN" ? "tag-gan" : dataset.modelTag === "LLM" ? "tag-llm" : "tag-diffusion"}`}
-              >
-                {dataset.modelTag} Model
-              </span>
+              <span className="tag tag-llm">{dataset.type} Data</span>
               <span className="text-xs text-dark-500">
                 {new Date(dataset.createdAt).toLocaleString()}
               </span>
@@ -206,50 +202,6 @@ export default function DatasetView() {
           )}
         </div>
       </div>
-
-      {/* Quality Scores */}
-      {dataset.qualityScore && (
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            {
-              label: "Realism",
-              value: dataset.qualityScore.realism,
-              color: "primary",
-            },
-            {
-              label: "Diversity",
-              value: dataset.qualityScore.diversity,
-              color: "accent",
-            },
-            {
-              label: "Privacy",
-              value: dataset.qualityScore.privacy,
-              color: "success",
-            },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="glass-card p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-dark-400">{label} Score</span>
-                <span className={`text-lg font-bold text-${color}-400`}>
-                  {value}%
-                </span>
-              </div>
-              <div className="w-full h-2 bg-dark-800 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-1000 ${
-                    color === "primary"
-                      ? "bg-primary-500"
-                      : color === "accent"
-                        ? "bg-accent-500"
-                        : "bg-success-500"
-                  }`}
-                  style={{ width: `${value}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Tabs */}
       {dataset.type === "tabular" && (

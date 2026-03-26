@@ -19,7 +19,7 @@ const templates = [
       "Comprehensive patient dataset with demographics, vitals, conditions, and risk levels.",
     icon: Heart,
     color: "from-red-500 to-pink-600",
-    tags: ["GAN", "Tabular"],
+    tags: ["Tabular"],
     config: {
       type: "tabular",
       name: "Healthcare_Patients",
@@ -80,7 +80,7 @@ const templates = [
       "Transaction records with amounts, categories, fraud indicators, and risk scores.",
     icon: DollarSign,
     color: "from-green-500 to-emerald-600",
-    tags: ["GAN", "Tabular"],
+    tags: ["Tabular"],
     config: {
       type: "tabular",
       name: "Financial_Transactions",
@@ -127,7 +127,7 @@ const templates = [
       "Customer profiles with purchase history, preferences, and engagement metrics.",
     icon: ShoppingCart,
     color: "from-blue-500 to-cyan-600",
-    tags: ["GAN", "Tabular"],
+    tags: ["Tabular"],
     config: {
       type: "tabular",
       name: "Ecommerce_Users",
@@ -260,7 +260,10 @@ export default function Templates() {
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col space-y-8 px-4 animate-fade-in">
-      <div className="flex flex-col items-center space-y-2">
+      <div
+        className="flex flex-col items-center space-y-2"
+        style={{ marginTop: "2.5rem", paddingBottom: "0.5rem" }}
+      >
         <div className="flex items-center gap-2 mb-2">
           <LayoutTemplate size={20} className="text-primary-400" />
           <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">
@@ -289,16 +292,7 @@ export default function Templates() {
                 </h3>
                 <div className="flex gap-1.5 mt-1.5">
                   {t.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className={`tag text-[9px] ${
-                        tag === "GAN"
-                          ? "tag-gan"
-                          : tag === "LLM"
-                            ? "tag-llm"
-                            : "tag-diffusion"
-                      }`}
-                    >
+                    <span key={tag} className="tag tag-llm text-[9px]">
                       {tag}
                     </span>
                   ))}

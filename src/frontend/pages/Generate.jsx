@@ -116,13 +116,11 @@ export default function Generate() {
 
     try {
       let result;
-      let modelTag = "GAN";
 
       // Structured input
       if (datasetType === "tabular") {
-        modelTag = "GAN";
         await simulateProgress([
-          { text: "Initializing GAN model...", pct: 15, delay: 600 },
+          { text: "Initializing model...", pct: 15, delay: 600 },
           { text: "Configuring data schema...", pct: 30, delay: 500 },
           { text: "Generating tabular data...", pct: 50, delay: 800 },
           {
@@ -152,10 +150,8 @@ export default function Generate() {
           data,
           columns: parsedCols,
           stats,
-          modelTag,
         };
       } else if (datasetType === "text") {
-        modelTag = "LLM";
         await simulateProgress([
           { text: "Loading LLM model...", pct: 15, delay: 700 },
           { text: `Generating ${textTopic} text data...`, pct: 40, delay: 800 },
@@ -180,12 +176,10 @@ export default function Generate() {
             tone: textTone,
             count: textCount,
           },
-          modelTag,
         };
       } else {
-        modelTag = "Diffusion";
         await simulateProgress([
-          { text: "Initializing Diffusion model...", pct: 15, delay: 700 },
+          { text: "Initializing model...", pct: 15, delay: 700 },
           {
             text: `Generating ${imgCategory} images (${imgStyle})...`,
             pct: 40,
@@ -206,7 +200,6 @@ export default function Generate() {
           type: "image",
           data,
           config: { category: imgCategory, style: imgStyle, count: imgCount },
-          modelTag,
         };
       }
 
@@ -214,13 +207,6 @@ export default function Generate() {
       if (!Array.isArray(result.data)) {
         throw new Error("Generated data is not in the correct format");
       }
-
-      // Compute quality scores
-      result.qualityScore = {
-        realism: Math.floor(70 + Math.random() * 25),
-        diversity: Math.floor(60 + Math.random() * 35),
-        privacy: 100,
-      };
 
       setProgress(100);
       setProgressText("Complete!");
@@ -239,7 +225,7 @@ export default function Generate() {
   return (
     <div className="max-w-4xl mx-auto flex flex-col space-y-8 px-4 animate-fade-in">
       {/* Header */}
-      <div>
+      <div style={{ marginLeft: "2rem" }}>
         <div className="flex items-center gap-2 mb-2">
           <Sparkles size={20} className="text-primary-400" />
           <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">

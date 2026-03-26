@@ -26,9 +26,9 @@ export default function Settings() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 animate-fade-in ml-6 px-4">
+    <div className="max-w-3xl mx-auto space-y-8 animate-fade-in ml-8 px-4">
       <div>
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center ml-8 gap-2 mb-2">
           <SettingsIcon size={20} className="text-primary-400" />
           <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">
             Settings
@@ -58,7 +58,7 @@ export default function Settings() {
           </div>
           <div className="flex justify-between text-dark-300">
             <span className="text-dark-400">AI Models</span>
-            <span>Google Gemini 1.5</span>
+            <span>Google Gemini 2.5</span>
           </div>
           <div className="flex justify-between text-dark-300">
             <span className="text-dark-400">Data Storage</span>

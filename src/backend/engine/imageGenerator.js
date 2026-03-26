@@ -1,12 +1,7 @@
 // Image Generation Engine
 // Uses Unsplash API to fetch high-quality images based on category
 
-const UNSPLASH_ACCESS_KEY =
-  process.env.UNSPLASH_ACCESS_KEY || process.env.VITE_UNSPLASH_ACCESS_KEY;
-const UNSPLASH_SECRET_KEY =
-  process.env.UNSPLASH_SECRET_KEY || process.env.VITE_UNSPLASH_SECRET_KEY;
-const UNSPLASH_APP_ID =
-  process.env.UNSPLASH_APP_ID || process.env.VITE_UNSPLASH_APP_ID;
+const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
 const UNSPLASH_API_BASE = "https://api.unsplash.com";
 
@@ -17,8 +12,9 @@ async function fetchImageFromUnsplash(query, pageNum = 1) {
       return null;
     }
 
-    // Search for images by query/category
-    const searchUrl = `${UNSPLASH_API_BASE}/search/photos?query=${encodeURIComponent(query)}&page=${pageNum}&per_page=1&orientation=landscape`;
+    const searchUrl = `${UNSPLASH_API_BASE}/search/photos?query=${encodeURIComponent(
+      query
+    )}&page=${pageNum}&per_page=1&orientation=landscape`;
 
     const resp = await fetch(searchUrl, {
       headers: {
@@ -40,11 +36,13 @@ async function fetchImageFromUnsplash(query, pageNum = 1) {
     }
 
     const image = data.results[0];
+
     return {
       url: image.urls.regular,
       credit: {
         photographer: image.user.name,
-        unsplashUrl: image.user.portfolio_url || image.user.links.html,
+        unsplashUrl:
+          image.user.portfolio_url || image.user.links.html,
       },
       alt: image.alt_description || query,
     };
@@ -58,6 +56,7 @@ async function imageUrlToDataUrl(imageUrl) {
   try {
     const response = await fetch(imageUrl);
     const blob = await response.blob();
+
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result);
@@ -71,26 +70,37 @@ async function imageUrlToDataUrl(imageUrl) {
 
 export async function generateSyntheticImages({ category, style, count }) {
   const images = [];
-
-  // Create a search query combining category and style
   const searchQuery = `${style} ${category}`;
 
-  for (let i = 0; i < count; i++) {
-    // Vary the search to get different results
-    const query = i > 0 ? `${searchQuery} ${i}` : searchQuery;
+  let attempts = 0;
+  const maxAttempts = count * 3; // allow retries
+
+  while (images.length < count && attempts < maxAttempts) {
+    attempts++;
+
+    // better variation
+    const queryVariants = [
+      searchQuery,
+      `${category}`,
+      `${style}`,
+      `${category} photo`,
+      `${style} ${category} high quality`,
+    ];
+
+    const query =
+      queryVariants[Math.floor(Math.random() * queryVariants.length)];
+
     const imageData = await fetchImageFromUnsplash(
       query,
-      Math.floor(i / 1) + 1,
+      Math.floor(Math.random() * 5) + 1
     );
 
     if (imageData?.url) {
-      // Note: In production, you may want to cache images or use URLs directly
-      // instead of converting to data URLs for performance
       const dataUrl = await imageUrlToDataUrl(imageData.url);
 
       images.push({
-        id: i + 1,
-        label: `${category}_${style}_${i + 1}`,
+        id: images.length + 1,
+        label: `${category}_${style}_${images.length + 1}`,
         dataUrl: dataUrl || imageData.url,
         url: imageData.url,
         category,
@@ -98,10 +108,14 @@ export async function generateSyntheticImages({ category, style, count }) {
         credit: imageData.credit,
         generatedAt: new Date().toISOString(),
       });
-    } else {
-      // Fallback to dummy image if Unsplash fetch fails
-      images.push(generateDummyImage(category, style, i + 1));
     }
+  }
+
+  // If still not enough → fill with dummy images
+  while (images.length < count) {
+    images.push(
+      generateDummyImage(category, style, images.length + 1)
+    );
   }
 
   return images;
@@ -111,6 +125,7 @@ function generateDummyImage(category, style, id) {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
   canvas.height = 256;
+
   const ctx = canvas.getContext("2d");
 
   const colors = {
@@ -134,7 +149,7 @@ function generateDummyImage(category, style, id) {
 
   return {
     id,
-    label: `${category}_${id}`,
+    label: `${category}_${style}_${id}`,
     dataUrl: canvas.toDataURL(),
     category,
     style,

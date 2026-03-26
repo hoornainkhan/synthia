@@ -73,7 +73,10 @@ export default function MyDatasets() {
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col space-y-8 px-4 animate-fade-in">
-      <div className="flex flex-col items-center space-y-2">
+      <div
+        className="flex flex-col items-center space-y-2"
+        style={{ marginTop: "2.5rem", paddingBottom: "0.5rem" }}
+      >
         <div className="flex items-center gap-2 mb-2">
           <FolderOpen size={20} className="text-primary-400" />
           <span className="text-xs font-semibold text-primary-400 uppercase tracking-wider">
@@ -102,12 +105,12 @@ export default function MyDatasets() {
             placeholder="Search datasets..."
           />
         </div>
-        <div className="flex gap-1.5 bg-dark-900/50 p-1.5 rounded-xl">
+        <div className="flex gap-1.5 w-60 h-8 justify-around bg-dark-900/50 p-1.5 rounded-xl">
           {["all", "tabular", "text", "image"].map((t) => (
             <button
               key={t}
               onClick={() => setTypeFilter(t)}
-              className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-all
+              className={`px-3.5 py-6 rounded-xl text-xs font-medium transition-all
                 ${typeFilter === t ? "bg-dark-700 text-primary-400" : "text-dark-400 hover:text-dark-300"}`}
             >
               {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -156,11 +159,7 @@ export default function MyDatasets() {
                     {new Date(ds.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <span
-                  className={`tag shrink-0 ${ds.modelTag === "GAN" ? "tag-gan" : ds.modelTag === "LLM" ? "tag-llm" : "tag-diffusion"}`}
-                >
-                  {ds.modelTag}
-                </span>
+                <span className="tag tag-llm shrink-0">{ds.type}</span>
               </div>
 
               <div className="flex items-center gap-3 text-xs text-dark-400 mb-5">
@@ -176,31 +175,6 @@ export default function MyDatasets() {
                   <Shield size={10} className="text-success-400" /> Synthetic
                 </span>
               </div>
-
-              {/* Quality mini-score */}
-              {ds.qualityScore && (
-                <div className="flex gap-3 mb-5">
-                  {Object.entries(ds.qualityScore).map(([key, val]) => (
-                    <div key={key} className="flex-1 text-center">
-                      <div className="w-full h-1.5 bg-dark-800 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${
-                            key === "realism"
-                              ? "bg-primary-500"
-                              : key === "diversity"
-                                ? "bg-accent-500"
-                                : "bg-success-500"
-                          }`}
-                          style={{ width: `${val}%` }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-dark-500 mt-1 block">
-                        {key} {val}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
 
               <div className="flex gap-2.5 pt-4 border-t border-dark-800/50">
                 <button

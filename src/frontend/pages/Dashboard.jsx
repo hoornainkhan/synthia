@@ -105,8 +105,11 @@ export default function Dashboard() {
 
       {/* Recent Datasets */}
       <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-dark-100">
+        <div
+          className="flex  items-center justify-between mb-6"
+          style={{ marginLeft: "2rem" }}
+        >
+          <h2 className="text-lg font-semibold text-dark-100 inline-block">
             Recent Datasets
           </h2>
           {datasets.length > 0 && (
@@ -155,11 +158,7 @@ export default function Dashboard() {
                       {new Date(ds.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <span
-                    className={`tag ${ds.type === "tabular" ? "tag-gan" : ds.type === "text" ? "tag-llm" : "tag-diffusion"}`}
-                  >
-                    {ds.modelTag || ds.type}
-                  </span>
+                  <span className="tag tag-llm">{ds.type}</span>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-dark-400">
                   {ds.type === "tabular" && (
