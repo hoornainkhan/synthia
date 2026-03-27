@@ -207,9 +207,7 @@ Contributions are welcome. Feel free to fork the repository and submit a pull re
 
 <hr>
 
-<h2>📄 License</h2>
 
-This project is licensed under the MIT License.
 
 <hr>
 
