@@ -13,7 +13,7 @@ async function fetchImageFromUnsplash(query, pageNum = 1) {
     }
 
     const searchUrl = `${UNSPLASH_API_BASE}/search/photos?query=${encodeURIComponent(
-      query
+      query,
     )}&page=${pageNum}&per_page=1&orientation=landscape`;
 
     const resp = await fetch(searchUrl, {
@@ -41,8 +41,7 @@ async function fetchImageFromUnsplash(query, pageNum = 1) {
       url: image.urls.regular,
       credit: {
         photographer: image.user.name,
-        unsplashUrl:
-          image.user.portfolio_url || image.user.links.html,
+        unsplashUrl: image.user.portfolio_url || image.user.links.html,
       },
       alt: image.alt_description || query,
     };
@@ -92,7 +91,7 @@ export async function generateSyntheticImages({ category, style, count }) {
 
     const imageData = await fetchImageFromUnsplash(
       query,
-      Math.floor(Math.random() * 5) + 1
+      Math.floor(Math.random() * 5) + 1,
     );
 
     if (imageData?.url) {
@@ -113,9 +112,7 @@ export async function generateSyntheticImages({ category, style, count }) {
 
   // If still not enough → fill with dummy images
   while (images.length < count) {
-    images.push(
-      generateDummyImage(category, style, images.length + 1)
-    );
+    images.push(generateDummyImage(category, style, images.length + 1));
   }
 
   return images;

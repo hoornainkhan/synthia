@@ -1,36 +1,52 @@
 // Text Data Generation Engine
-// Uses OpenRouter LLM API via backend proxy
+// Uses NVIDIA NIM API via backend proxy
 
-// Helper function to call LLM API through backend proxy
-async function callLLMAPI(prompt) {
-  try {
-    const response = await fetch("http://localhost:4000/api/groq", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt }),
-    });
+// Helper function to call LLM API through backend proxy with Retry Logic
+async function callLLMAPI(prompt, maxRetries = 3) {
+  let delay = 2000; // Start with a 2-second delay
 
-    if (!response.ok) {
-      let errorMsg = `Backend error (${response.status})`;
-      try {
-        const errorData = await response.json();
-        errorMsg += `: ${errorData.error || "Unknown error"}`;
-      } catch {
-        // ignore parse error
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch("http://localhost:4000/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        // If we hit a rate limit (429), wait and try again
+        if (response.status === 429 && attempt < maxRetries) {
+          console.warn(
+            `[TextGen] Rate limited (429). Retrying in ${delay}ms... (Attempt ${attempt} of ${maxRetries})`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          delay *= 2; // Double the wait time (2s, 4s, 8s)
+          continue;
+        }
+
+        let errorMsg = `Backend error (${response.status})`;
+        try {
+          const errorData = await response.json();
+          errorMsg += `: ${errorData.error || "Unknown error"}`;
+        } catch {
+          // ignore parse error
+        }
+        throw new Error(errorMsg);
       }
-      throw new Error(errorMsg);
-    }
 
-    const data = await response.json();
-    if (!data.content || typeof data.content !== "string") {
-      throw new Error("Empty or invalid content in API response");
+      const data = await response.json();
+      if (!data.content || typeof data.content !== "string") {
+        throw new Error("Empty or invalid content in API response");
+      }
+      return data.content;
+    } catch (error) {
+      if (attempt === maxRetries) {
+        console.error("LLM API call failed after max retries:", error.message);
+        throw error;
+      }
     }
-    return data.content;
-  } catch (error) {
-    console.error("LLM API call failed:", error.message);
-    throw error;
   }
 }
 

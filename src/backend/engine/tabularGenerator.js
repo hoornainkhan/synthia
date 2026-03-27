@@ -4,7 +4,7 @@
 // Helper function to call LLM API through backend proxy
 async function callLLMAPI(prompt) {
   try {
-    const response = await fetch("http://localhost:4000/api/groq", {
+    const response = await fetch("http://localhost:4000/api/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -37,48 +37,147 @@ async function callLLMAPI(prompt) {
 
 // Data arrays for random generation
 const firstNames = [
-  "John", "Jane", "Michael", "Sarah", "David", "Emma", "Chris", "Lisa",
-  "Robert", "Anna", "James", "Emily", "William", "Olivia", "Benjamin",
-  "Sophia", "Daniel", "Isabella", "Matthew", "Mia",
+  "John",
+  "Jane",
+  "Michael",
+  "Sarah",
+  "David",
+  "Emma",
+  "Chris",
+  "Lisa",
+  "Robert",
+  "Anna",
+  "James",
+  "Emily",
+  "William",
+  "Olivia",
+  "Benjamin",
+  "Sophia",
+  "Daniel",
+  "Isabella",
+  "Matthew",
+  "Mia",
 ];
 const lastNames = [
-  "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller",
-  "Davis", "Rodriguez", "Martinez", "Anderson", "Taylor", "Thomas",
-  "Jackson", "White", "Harris", "Martin", "Thompson", "Moore", "Allen",
+  "Smith",
+  "Johnson",
+  "Williams",
+  "Brown",
+  "Jones",
+  "Garcia",
+  "Miller",
+  "Davis",
+  "Rodriguez",
+  "Martinez",
+  "Anderson",
+  "Taylor",
+  "Thomas",
+  "Jackson",
+  "White",
+  "Harris",
+  "Martin",
+  "Thompson",
+  "Moore",
+  "Allen",
 ];
 const cities = [
-  "New York", "Los Angeles", "Chicago", "Houston", "Phoenix",
-  "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose",
-  "Austin", "Jacksonville", "Fort Worth", "Columbus", "Charlotte",
+  "New York",
+  "Los Angeles",
+  "Chicago",
+  "Houston",
+  "Phoenix",
+  "Philadelphia",
+  "San Antonio",
+  "San Diego",
+  "Dallas",
+  "San Jose",
+  "Austin",
+  "Jacksonville",
+  "Fort Worth",
+  "Columbus",
+  "Charlotte",
 ];
 const departments = [
-  "Engineering", "Marketing", "Sales", "HR", "Finance",
-  "Operations", "IT", "Legal", "R&D", "Support",
-  "Product", "Design", "Quality Assurance", "Customer Success",
+  "Engineering",
+  "Marketing",
+  "Sales",
+  "HR",
+  "Finance",
+  "Operations",
+  "IT",
+  "Legal",
+  "R&D",
+  "Support",
+  "Product",
+  "Design",
+  "Quality Assurance",
+  "Customer Success",
 ];
 const conditions = [
-  "Healthy", "Hypertension", "Diabetes", "Asthma", "Arthritis",
-  "Depression", "Anxiety", "Migraine", "Allergies", "Back Pain",
-  "Insomnia", "Obesity", "Anemia", "Bronchitis",
+  "Healthy",
+  "Hypertension",
+  "Diabetes",
+  "Asthma",
+  "Arthritis",
+  "Depression",
+  "Anxiety",
+  "Migraine",
+  "Allergies",
+  "Back Pain",
+  "Insomnia",
+  "Obesity",
+  "Anemia",
+  "Bronchitis",
 ];
 const statuses = [
-  "Active", "Inactive", "Pending", "Completed", "Cancelled",
-  "On Hold", "Approved", "Rejected", "In Progress", "Closed",
+  "Active",
+  "Inactive",
+  "Pending",
+  "Completed",
+  "Cancelled",
+  "On Hold",
+  "Approved",
+  "Rejected",
+  "In Progress",
+  "Closed",
 ];
 const companies = [
-  "Acme Corp", "TechVision Inc", "Global Solutions", "Innovate Labs",
-  "Summit Enterprises", "Nexus Group", "Pinnacle Systems", "Atlas Digital",
-  "Vertex Industries", "Quantum Dynamics",
+  "Acme Corp",
+  "TechVision Inc",
+  "Global Solutions",
+  "Innovate Labs",
+  "Summit Enterprises",
+  "Nexus Group",
+  "Pinnacle Systems",
+  "Atlas Digital",
+  "Vertex Industries",
+  "Quantum Dynamics",
 ];
 const products = [
-  "Widget Pro", "Smart Sensor", "Cloud Manager", "Data Analyzer",
-  "Network Hub", "Security Suite", "Task Runner", "Code Editor",
-  "File Sync", "Report Builder",
+  "Widget Pro",
+  "Smart Sensor",
+  "Cloud Manager",
+  "Data Analyzer",
+  "Network Hub",
+  "Security Suite",
+  "Task Runner",
+  "Code Editor",
+  "File Sync",
+  "Report Builder",
 ];
 const jobTitles = [
-  "Software Engineer", "Data Analyst", "Product Manager", "UX Designer",
-  "DevOps Engineer", "Marketing Lead", "Sales Rep", "HR Coordinator",
-  "QA Tester", "Business Analyst", "CTO", "VP of Engineering",
+  "Software Engineer",
+  "Data Analyst",
+  "Product Manager",
+  "UX Designer",
+  "DevOps Engineer",
+  "Marketing Lead",
+  "Sales Rep",
+  "HR Coordinator",
+  "QA Tester",
+  "Business Analyst",
+  "CTO",
+  "VP of Engineering",
 ];
 
 // Review/comment/feedback templates for local fallback
@@ -114,11 +213,21 @@ const descriptionTemplates = [
 ];
 
 const titleTemplates = [
-  "Advanced Analytics Dashboard", "Smart Home Controller Pro", "Cloud Storage Solution",
-  "Enterprise Security Platform", "Digital Marketing Toolkit", "AI-Powered Assistant",
-  "Real-Time Data Monitor", "Automated Workflow Engine", "Customer Insights Report",
-  "Performance Optimization Suite", "Mobile Payment Gateway", "Team Collaboration Hub",
-  "Inventory Management System", "Predictive Maintenance Tool", "Content Management Platform",
+  "Advanced Analytics Dashboard",
+  "Smart Home Controller Pro",
+  "Cloud Storage Solution",
+  "Enterprise Security Platform",
+  "Digital Marketing Toolkit",
+  "AI-Powered Assistant",
+  "Real-Time Data Monitor",
+  "Automated Workflow Engine",
+  "Customer Insights Report",
+  "Performance Optimization Suite",
+  "Mobile Payment Gateway",
+  "Team Collaboration Hub",
+  "Inventory Management System",
+  "Predictive Maintenance Tool",
+  "Content Management Platform",
 ];
 
 function randInt(min, max) {
@@ -160,19 +269,80 @@ function parseLLMJSON(text) {
       .replace(/```\s*/g, "")
       .trim();
 
-    // Try to find JSON array in the response
-    const arrayMatch = cleanText.match(/\[[\s\S]*\]/);
-    if (arrayMatch) {
-      return JSON.parse(arrayMatch[0]);
+    // Try direct parse first
+    try {
+      return JSON.parse(cleanText);
+    } catch {
+      // If direct parse fails, try to extract JSON
     }
 
-    return JSON.parse(cleanText);
-  } catch (err) {
-    console.warn("JSON parse failed, trying line-by-line extraction:", err.message);
+    // Try to find JSON object by matching braces
+    const objectMatch = cleanText.match(/\{[\s\S]*\}/);
+    if (objectMatch) {
+      try {
+        return JSON.parse(objectMatch[0]);
+      } catch {
+        // ignore and try array
+      }
+    }
+
+    // Try to find JSON array
+    const arrayMatch = cleanText.match(/\[[\s\S]*\]/);
+    if (arrayMatch) {
+      try {
+        return JSON.parse(arrayMatch[0]);
+      } catch {
+        // ignore and try manual extraction
+      }
+    }
+
+    // Manual extraction: find opening bracket/brace and matching closing one
+    const startIdx = Math.max(cleanText.indexOf("{"), cleanText.indexOf("["));
+    if (startIdx !== -1) {
+      const openChar = cleanText[startIdx];
+      const closeChar = openChar === "{" ? "}" : "]";
+      let braceCount = 0;
+      let inString = false;
+      let escapeNext = false;
+
+      for (let i = startIdx; i < cleanText.length; i++) {
+        const char = cleanText[i];
+
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+
+        if (char === "\\") {
+          escapeNext = true;
+          continue;
+        }
+
+        if (char === '"') {
+          inString = !inString;
+          continue;
+        }
+
+        if (inString) continue;
+
+        if (char === openChar) braceCount++;
+        if (char === closeChar) {
+          braceCount--;
+          if (braceCount === 0) {
+            const jsonStr = cleanText.substring(startIdx, i + 1);
+            try {
+              return JSON.parse(jsonStr);
+            } catch {
+              // ignore
+            }
+          }
+        }
+      }
+    }
 
     // Last resort: try to extract quoted strings
     try {
-      const matches = text.match(/"([^"]+)"/g);
+      const matches = cleanText.match(/"([^"]+)"/g);
       if (matches && matches.length > 0) {
         return matches.map((m) => m.replace(/^"|"$/g, ""));
       }
@@ -181,6 +351,9 @@ function parseLLMJSON(text) {
     }
 
     return null;
+  } catch (err) {
+    console.warn("JSON parse failed:", err.message);
+    return null;
   }
 }
 
@@ -188,22 +361,36 @@ function parseLLMJSON(text) {
 function generateLocalTextValues(col, numRows) {
   const name = col.name.toLowerCase();
 
-  if (name.includes("review") || name.includes("comment") || name.includes("feedback")) {
+  if (
+    name.includes("review") ||
+    name.includes("comment") ||
+    name.includes("feedback")
+  ) {
     return Array.from({ length: numRows }, () => randChoice(reviewTemplates));
   }
   if (name.includes("description") || name.includes("desc")) {
-    return Array.from({ length: numRows }, () => randChoice(descriptionTemplates));
+    return Array.from({ length: numRows }, () =>
+      randChoice(descriptionTemplates),
+    );
   }
   if (name.includes("title") || name.includes("subject")) {
     return Array.from({ length: numRows }, () => randChoice(titleTemplates));
   }
-  if (name.includes("company") || name.includes("organization") || name.includes("org")) {
+  if (
+    name.includes("company") ||
+    name.includes("organization") ||
+    name.includes("org")
+  ) {
     return Array.from({ length: numRows }, () => randChoice(companies));
   }
   if (name.includes("product")) {
     return Array.from({ length: numRows }, () => randChoice(products));
   }
-  if (name.includes("job") || name.includes("position") || name.includes("role")) {
+  if (
+    name.includes("job") ||
+    name.includes("position") ||
+    name.includes("role")
+  ) {
     return Array.from({ length: numRows }, () => randChoice(jobTitles));
   }
 
@@ -217,9 +404,9 @@ function generateLocalTextValues(col, numRows) {
 async function generateTextValues(col, numRows, context = {}) {
   const name = col.name.toLowerCase();
   const categories = col.categories
-    ? (Array.isArray(col.categories)
-        ? col.categories
-        : col.categories.split(",").map((s) => s.trim()))
+    ? Array.isArray(col.categories)
+      ? col.categories
+      : col.categories.split(",").map((s) => s.trim())
     : null;
 
   // For columns that can be generated randomly without API
@@ -229,7 +416,11 @@ async function generateTextValues(col, numRows, context = {}) {
   if (name.includes("name") && name.includes("last")) {
     return Array.from({ length: numRows }, () => randChoice(lastNames));
   }
-  if (name.includes("name") && !name.includes("column") && !name.includes("dataset")) {
+  if (
+    name.includes("name") &&
+    !name.includes("column") &&
+    !name.includes("dataset")
+  ) {
     return Array.from(
       { length: numRows },
       () => `${randChoice(firstNames)} ${randChoice(lastNames)}`,
@@ -255,7 +446,12 @@ async function generateTextValues(col, numRows, context = {}) {
     return Array.from({ length: numRows }, () => randChoice(statuses));
   }
   if (name.includes("category")) {
-    const cats = categories || ["Category A", "Category B", "Category C", "Category D"];
+    const cats = categories || [
+      "Category A",
+      "Category B",
+      "Category C",
+      "Category D",
+    ];
     return Array.from({ length: numRows }, () => randChoice(cats));
   }
   if (name.includes("address")) {
@@ -280,8 +476,16 @@ async function generateTextValues(col, numRows, context = {}) {
   if (name.includes("country")) {
     return Array.from({ length: numRows }, () =>
       randChoice([
-        "USA", "UK", "Canada", "India", "Germany",
-        "Japan", "Australia", "Brazil", "France", "China",
+        "USA",
+        "UK",
+        "Canada",
+        "India",
+        "Germany",
+        "Japan",
+        "Australia",
+        "Brazil",
+        "France",
+        "China",
       ]),
     );
   }
@@ -300,7 +504,11 @@ async function generateTextValues(col, numRows, context = {}) {
   if (name.includes("product")) {
     return Array.from({ length: numRows }, () => randChoice(products));
   }
-  if (name.includes("job") || name.includes("position") || name.includes("role")) {
+  if (
+    name.includes("job") ||
+    name.includes("position") ||
+    name.includes("role")
+  ) {
     return Array.from({ length: numRows }, () => randChoice(jobTitles));
   }
 
@@ -325,18 +533,27 @@ async function generateTextValues(col, numRows, context = {}) {
       const text = await callLLMAPI(prompt);
       const values = parseLLMJSON(text);
       if (!Array.isArray(values) || values.length === 0) {
-        console.warn(`LLM returned invalid array for "${col.name}", using local fallback`);
+        console.warn(
+          `LLM returned invalid array for "${col.name}", using local fallback`,
+        );
         return generateLocalTextValues(col, numRows);
       }
       // Ensure we have enough values (pad if needed)
       const result = [];
       for (let i = 0; i < numRows; i++) {
         const val = values[i % values.length];
-        result.push(typeof val === "string" ? val.replace(/^["']|["']$/g, "") : String(val));
+        result.push(
+          typeof val === "string"
+            ? val.replace(/^["']|["']$/g, "")
+            : String(val),
+        );
       }
       return result;
     } catch (error) {
-      console.warn(`LLM API failed for "${col.name}", using local fallback:`, error.message);
+      console.warn(
+        `LLM API failed for "${col.name}", using local fallback:`,
+        error.message,
+      );
       return generateLocalTextValues(col, numRows);
     }
   }
@@ -347,6 +564,53 @@ async function generateTextValues(col, numRows, context = {}) {
 async function generateTextValue(col, context = {}) {
   const values = await generateTextValues(col, 1, context);
   return values[0];
+}
+
+// New helper to generate all LLM columns in ONE single request
+async function batchGenerateLLM(columns, numRows, context = {}) {
+  if (!columns || columns.length === 0) return {};
+
+  const colPrompts = columns.map((col) => {
+    const name = col.name.toLowerCase();
+    let instruction = "natural sounding text (5-20 words)";
+    if (
+      name.includes("review") ||
+      name.includes("comment") ||
+      name.includes("feedback")
+    )
+      instruction = "realistic reviews/comments (10-30 words)";
+    if (name.includes("description"))
+      instruction = "realistic descriptions (20-50 words)";
+    if (name.includes("title") || name.includes("subject"))
+      instruction = "realistic short titles (under 10 words)";
+    return `"${col.name}": ${instruction}`;
+  });
+
+  const prompt = `Generate exactly ${numRows} mock data entries for the following columns:
+${colPrompts.join("\n")}
+
+Rules:
+- Return ONLY a valid JSON object.
+- Keys MUST be the exact column names requested.
+- Values MUST be arrays of exactly ${numRows} strings.
+- No markdown, no explanations, no extra text.
+
+Example format:
+{
+  "${columns[0]?.name || "Column1"}": ["entry 1", "entry 2"],
+  "AnotherColumn": ["value 1", "value 2"]
+}`;
+
+  try {
+    const text = await callLLMAPI(prompt);
+    const parsed = parseLLMJSON(text);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed;
+    }
+  } catch (error) {
+    console.warn("Batch LLM failed, will use fallbacks:", error.message);
+  }
+  return {};
 }
 
 function generateValue(col, rowContext = {}) {
@@ -408,31 +672,82 @@ function generateValue(col, rowContext = {}) {
 export async function generateTabularData(columns, numRows, noiseLevel = 0.3) {
   const data = [];
 
-  // Separate text and non-text columns for batch processing
+  // Separate text and non-text columns
   const textColumns = columns.filter((col) => col.type === "text");
   const nonTextColumns = columns.filter((col) => col.type !== "text");
 
-  // Pre-generate text column values in batches
   const textColumnValues = {};
+  const llmColumnsToBatch = [];
+
+  // 1. Identify which text columns can be generated locally vs need API
   for (const col of textColumns) {
-    try {
+    const name = col.name.toLowerCase();
+    // Check if it matches our local hardcoded lists
+    if (
+      name.includes("name") ||
+      name.includes("email") ||
+      name.includes("city") ||
+      name.includes("location") ||
+      name.includes("department") ||
+      name.includes("dept") ||
+      name.includes("condition") ||
+      name.includes("diagnosis") ||
+      name.includes("status") ||
+      name.includes("category") ||
+      name.includes("address") ||
+      name.includes("phone") ||
+      name.includes("gender") ||
+      name.includes("sex") ||
+      name.includes("country") ||
+      name.includes("date") ||
+      name.includes("id") ||
+      name.includes("company") ||
+      name.includes("org") ||
+      name.includes("product") ||
+      name.includes("job") ||
+      name.includes("position") ||
+      name.includes("role")
+    ) {
+      // Generate locally (instant, 0 API calls)
       textColumnValues[col.name] = await generateTextValues(col, numRows);
-    } catch (err) {
-      console.warn(`Failed to generate text for "${col.name}", using fallback:`, err.message);
-      textColumnValues[col.name] = generateLocalTextValues(col, numRows);
+    } else {
+      // Needs LLM generation
+      llmColumnsToBatch.push(col);
     }
   }
 
+  // 2. BATCH API CALL: Generate all complex text columns in ONE request
+  if (llmColumnsToBatch.length > 0) {
+    console.log(
+      `Sending 1 batch request for ${llmColumnsToBatch.length} columns...`,
+    );
+    const batchResults = await batchGenerateLLM(llmColumnsToBatch, numRows);
+
+    for (const col of llmColumnsToBatch) {
+      if (batchResults[col.name] && Array.isArray(batchResults[col.name])) {
+        // Ensure we have exactly numRows items (pad if the LLM returned too few)
+        let vals = batchResults[col.name];
+        while (vals.length < numRows) vals = vals.concat(vals);
+        textColumnValues[col.name] = vals.slice(0, numRows);
+      } else {
+        // Fallback if the LLM messed up a specific column
+        console.warn(`Batch missed "${col.name}", using local fallback`);
+        textColumnValues[col.name] = generateLocalTextValues(col, numRows);
+      }
+    }
+  }
+
+  // 3. Assemble the final rows
   for (let i = 0; i < numRows; i++) {
     const row = {};
     const ctx = {};
 
-    // Generate non-text values first
+    // Generate non-text values
     for (const col of nonTextColumns) {
       row[col.name] = generateValue(col, ctx);
     }
 
-    // Assign pre-generated text values
+    // Assign text values
     for (const col of textColumns) {
       row[col.name] = textColumnValues[col.name][i] || `${col.name} ${i + 1}`;
     }
